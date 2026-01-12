@@ -1,18 +1,21 @@
-import React, { useState, useRef } from 'react';
-import { Plus, Trash2, Printer, Download, FileText, User, MapPin, MessageSquare, Briefcase, Calendar } from 'lucide-react';
+import React, { useState } from 'react';
+import { Plus, Trash2, Printer, Download, FileText, User, MapPin, MessageSquare, Briefcase, Info } from 'lucide-react';
 
 const App = () => {
   // 基本資訊狀態
   const [reportDate, setReportDate] = useState(new Date().toISOString().split('T')[0]);
   const [salesName, setSalesName] = useState('');
   const [department, setDepartment] = useState('');
+  
+  // 狀態提示訊息
+  const [statusMessage, setStatusMessage] = useState('');
 
   // 拜訪紀錄列表狀態
   const [visits, setVisits] = useState([
     { id: 1, storeName: '', contactPerson: '', content: '', nextStep: '', result: '' }
   ]);
 
-  // 主管溝通欄狀態（預留給業務填寫想對主管說的話，或留白）
+  // 主管溝通欄狀態
   const [noteToSupervisor, setNoteToSupervisor] = useState('');
 
   // 新增一筆拜訪紀錄
@@ -33,30 +36,67 @@ const App = () => {
     setVisits(visits.map(v => v.id === id ? { ...v, [field]: value } : v));
   };
 
-  // 觸發列印功能
+  // 處理列印功能
   const handlePrint = () => {
-    window.print();
+    setStatusMessage('正在開啟列印視窗...請稍候');
+    // 使用 setTimeout 避開瀏覽器的立即執行緒阻塞，增加成功機率
+    setTimeout(() => {
+      window.print();
+      // 列印視窗關閉或彈出後，清除訊息
+      setTimeout(() => setStatusMessage(''), 1000);
+    }, 500);
+  };
+
+  // 處理下載 PDF 功能
+  const handlePdfDownload = () => {
+    setStatusMessage('請在跳出的視窗中，將目的地改為「另存為 PDF」');
+    setTimeout(() => {
+      window.print();
+      setTimeout(() => setStatusMessage(''), 3000); // 訊息顯示久一點以便閱讀
+    }, 500);
   };
 
   return (
     <div className="min-h-screen bg-gray-100 p-4 md:p-8 font-sans text-gray-800">
       
       {/* 操作控制列 (列印時隱藏) */}
-      <div className="max-w-4xl mx-auto mb-6 flex justify-between items-center print:hidden bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+      <div className="max-w-4xl mx-auto mb-6 flex flex-col sm:flex-row justify-between items-center print:hidden bg-white p-4 rounded-lg shadow-sm border border-gray-200 gap-4">
         <div>
           <h1 className="text-xl font-bold text-blue-800 flex items-center gap-2">
             <FileText className="w-6 h-6" />
             業務日報生成器
           </h1>
-          <p className="text-sm text-gray-500 mt-1">填寫完畢後，點擊右側按鈕輸出報表</p>
+          <p className="text-sm text-gray-500 mt-1">填寫完畢後，請選擇列印紙本或下載 PDF 檔案</p>
         </div>
-        <button 
-          onClick={handlePrint}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg flex items-center gap-2 shadow transition-colors font-medium"
-        >
-          <Printer className="w-5 h-5" />
-          列印 / 另存 PDF
-        </button>
+        
+        {/* 按鈕區域 */}
+        <div className="flex flex-col items-end gap-2">
+          <div className="flex gap-3">
+            <button 
+              onClick={handlePrint}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg flex items-center gap-2 shadow transition-colors font-medium active:scale-95 transform"
+              title="直接列印紙本"
+            >
+              <Printer className="w-5 h-5" />
+              列印報表
+            </button>
+            <button 
+              onClick={handlePdfDownload}
+              className="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-lg flex items-center gap-2 shadow transition-colors font-medium active:scale-95 transform"
+              title="儲存為 PDF 檔案"
+            >
+              <Download className="w-5 h-5" />
+              下載 PDF
+            </button>
+          </div>
+          {/* 狀態提示文字 */}
+          {statusMessage && (
+            <div className="text-sm text-orange-600 font-bold animate-pulse flex items-center gap-1">
+              <Info className="w-4 h-4" />
+              {statusMessage}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* 報表主體 (A4 紙張模擬) */}
