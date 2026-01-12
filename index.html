@@ -1,0 +1,264 @@
+import React, { useState, useRef } from 'react';
+import { Plus, Trash2, Printer, Download, FileText, User, MapPin, MessageSquare, Briefcase, Calendar } from 'lucide-react';
+
+const App = () => {
+  // 基本資訊狀態
+  const [reportDate, setReportDate] = useState(new Date().toISOString().split('T')[0]);
+  const [salesName, setSalesName] = useState('');
+  const [department, setDepartment] = useState('');
+
+  // 拜訪紀錄列表狀態
+  const [visits, setVisits] = useState([
+    { id: 1, storeName: '', contactPerson: '', content: '', nextStep: '', result: '' }
+  ]);
+
+  // 主管溝通欄狀態（預留給業務填寫想對主管說的話，或留白）
+  const [noteToSupervisor, setNoteToSupervisor] = useState('');
+
+  // 新增一筆拜訪紀錄
+  const addVisit = () => {
+    const newId = visits.length > 0 ? Math.max(...visits.map(v => v.id)) + 1 : 1;
+    setVisits([...visits, { id: newId, storeName: '', contactPerson: '', content: '', nextStep: '', result: '' }]);
+  };
+
+  // 刪除一筆拜訪紀錄
+  const removeVisit = (id) => {
+    if (visits.length > 1) {
+      setVisits(visits.filter(v => v.id !== id));
+    }
+  };
+
+  // 更新拜訪紀錄內容
+  const updateVisit = (id, field, value) => {
+    setVisits(visits.map(v => v.id === id ? { ...v, [field]: value } : v));
+  };
+
+  // 觸發列印功能
+  const handlePrint = () => {
+    window.print();
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-100 p-4 md:p-8 font-sans text-gray-800">
+      
+      {/* 操作控制列 (列印時隱藏) */}
+      <div className="max-w-4xl mx-auto mb-6 flex justify-between items-center print:hidden bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+        <div>
+          <h1 className="text-xl font-bold text-blue-800 flex items-center gap-2">
+            <FileText className="w-6 h-6" />
+            業務日報生成器
+          </h1>
+          <p className="text-sm text-gray-500 mt-1">填寫完畢後，點擊右側按鈕輸出報表</p>
+        </div>
+        <button 
+          onClick={handlePrint}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg flex items-center gap-2 shadow transition-colors font-medium"
+        >
+          <Printer className="w-5 h-5" />
+          列印 / 另存 PDF
+        </button>
+      </div>
+
+      {/* 報表主體 (A4 紙張模擬) */}
+      <div className="max-w-4xl mx-auto bg-white shadow-lg print:shadow-none print:w-full print:max-w-none min-h-[297mm] relative p-8 md:p-12 print:p-0">
+        
+        {/* 報表標頭 */}
+        <header className="border-b-2 border-blue-800 pb-4 mb-8">
+          <div className="flex justify-between items-end">
+            <div>
+              <h2 className="text-3xl font-bold text-gray-900 tracking-wide">業務拜訪日報表</h2>
+              <p className="text-gray-500 mt-2 text-sm">Daily Sales Report</p>
+            </div>
+            <div className="text-right">
+              <div className="flex items-center gap-2 justify-end mb-1">
+                <span className="font-semibold text-gray-600">日期：</span>
+                <input 
+                  type="date" 
+                  value={reportDate} 
+                  onChange={(e) => setReportDate(e.target.value)}
+                  className="border-b border-gray-300 focus:border-blue-600 outline-none text-right bg-transparent print:border-none"
+                />
+              </div>
+            </div>
+          </div>
+        </header>
+
+        {/* 業務人員資訊 */}
+        <section className="grid grid-cols-2 gap-8 mb-8 bg-blue-50 p-4 rounded print:bg-transparent print:p-0 print:border print:border-gray-300">
+          <div className="flex flex-col">
+            <label className="text-xs font-bold text-blue-800 uppercase mb-1">業務姓名 (Sales Rep)</label>
+            <input 
+              type="text" 
+              placeholder="請輸入您的姓名"
+              value={salesName}
+              onChange={(e) => setSalesName(e.target.value)}
+              className="w-full bg-transparent border-b border-gray-300 focus:border-blue-500 outline-none py-1 print:border-none font-medium text-lg"
+            />
+          </div>
+          <div className="flex flex-col">
+            <label className="text-xs font-bold text-blue-800 uppercase mb-1">部門/區域 (Department)</label>
+            <input 
+              type="text" 
+              placeholder="例：北區業務一部"
+              value={department}
+              onChange={(e) => setDepartment(e.target.value)}
+              className="w-full bg-transparent border-b border-gray-300 focus:border-blue-500 outline-none py-1 print:border-none font-medium text-lg"
+            />
+          </div>
+        </section>
+
+        {/* 拜訪內容列表 */}
+        <section className="mb-8">
+          <div className="flex justify-between items-center mb-4 border-b border-gray-200 pb-2">
+            <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+              <Briefcase className="w-5 h-5 text-blue-600" />
+              本日拜訪紀錄
+            </h3>
+            <button 
+              onClick={addVisit}
+              className="text-sm bg-green-100 text-green-700 hover:bg-green-200 px-3 py-1 rounded-full flex items-center gap-1 print:hidden transition-colors"
+            >
+              <Plus className="w-4 h-4" /> 新增行程
+            </button>
+          </div>
+
+          <div className="space-y-6">
+            {visits.map((visit, index) => (
+              <div key={visit.id} className="relative border border-gray-200 rounded-lg p-5 hover:shadow-md transition-shadow print:border-gray-300 print:shadow-none break-inside-avoid">
+                {/* 刪除按鈕 (列印時隱藏) */}
+                {visits.length > 1 && (
+                  <button 
+                    onClick={() => removeVisit(visit.id)}
+                    className="absolute top-4 right-4 text-gray-400 hover:text-red-500 print:hidden p-1"
+                    title="刪除此紀錄"
+                  >
+                    <Trash2 className="w-5 h-5" />
+                  </button>
+                )}
+
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+                  {/* 第一行：店家與對接人 */}
+                  <div className="md:col-span-8">
+                    <div className="flex items-center gap-2 mb-1">
+                      <MapPin className="w-4 h-4 text-gray-400" />
+                      <label className="text-xs font-bold text-gray-500">店家名稱 / 客戶</label>
+                    </div>
+                    <input 
+                      type="text" 
+                      placeholder="輸入客戶名稱"
+                      value={visit.storeName}
+                      onChange={(e) => updateVisit(visit.id, 'storeName', e.target.value)}
+                      className="w-full font-bold text-lg border-b border-gray-200 focus:border-blue-500 outline-none pb-1 bg-transparent placeholder-gray-300 print:border-none"
+                    />
+                  </div>
+                  <div className="md:col-span-4">
+                    <div className="flex items-center gap-2 mb-1">
+                      <User className="w-4 h-4 text-gray-400" />
+                      <label className="text-xs font-bold text-gray-500">對接人員 & 職稱</label>
+                    </div>
+                    <input 
+                      type="text" 
+                      placeholder="例：陳店長"
+                      value={visit.contactPerson}
+                      onChange={(e) => updateVisit(visit.id, 'contactPerson', e.target.value)}
+                      className="w-full text-base border-b border-gray-200 focus:border-blue-500 outline-none pb-1 bg-transparent placeholder-gray-300 print:border-none"
+                    />
+                  </div>
+
+                  {/* 第二行：拜訪內容 (多行文字) */}
+                  <div className="md:col-span-12 mt-2">
+                    <div className="flex items-center gap-2 mb-1">
+                      <MessageSquare className="w-4 h-4 text-gray-400" />
+                      <label className="text-xs font-bold text-gray-500">拜訪內容 / 洽談重點</label>
+                    </div>
+                    <textarea 
+                      rows={3}
+                      placeholder="請詳細描述今日洽談事項、客戶需求、產品反饋..."
+                      value={visit.content}
+                      onChange={(e) => updateVisit(visit.id, 'content', e.target.value)}
+                      className="w-full text-sm leading-relaxed border border-gray-200 rounded p-2 focus:border-blue-500 outline-none resize-none bg-gray-50 print:bg-transparent print:border-none print:p-0 print:resize-none"
+                    />
+                  </div>
+
+                  {/* 第三行：後續行動與結果 */}
+                  <div className="md:col-span-8 mt-1">
+                     <label className="text-xs font-bold text-blue-600 mb-1 block">後續跟進 / 待辦事項 (Next Steps)</label>
+                     <input 
+                      type="text" 
+                      placeholder="例：下週三寄送報價單"
+                      value={visit.nextStep}
+                      onChange={(e) => updateVisit(visit.id, 'nextStep', e.target.value)}
+                      className="w-full text-sm border-b border-gray-200 focus:border-blue-500 outline-none pb-1 bg-transparent print:border-none"
+                    />
+                  </div>
+                   <div className="md:col-span-4 mt-1">
+                     <label className="text-xs font-bold text-green-600 mb-1 block">洽談結果 / 預估業績</label>
+                     <input 
+                      type="text" 
+                      placeholder="例：已簽約 / 潛在 $5000"
+                      value={visit.result}
+                      onChange={(e) => updateVisit(visit.id, 'result', e.target.value)}
+                      className="w-full text-sm border-b border-gray-200 focus:border-blue-500 outline-none pb-1 bg-transparent print:border-none"
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* 底部區域：自我檢討 & 主管批示 */}
+        <div className="grid grid-cols-1 gap-8 break-inside-avoid">
+            
+            {/* 業務備註欄 */}
+            <div className="border border-gray-300 rounded-lg p-4 bg-yellow-50/50 print:bg-transparent">
+                <h3 className="text-sm font-bold text-gray-700 mb-2">業務備註 / 需主管協助事項</h3>
+                <textarea 
+                    rows={3}
+                    placeholder="若有需要主管協助或特別說明的困難，請填寫於此..."
+                    value={noteToSupervisor}
+                    onChange={(e) => setNoteToSupervisor(e.target.value)}
+                    className="w-full bg-transparent outline-none text-sm resize-none print:border-none"
+                />
+            </div>
+
+            {/* 主管溝通欄 (保留給主管填寫) */}
+            <div className="border-2 border-gray-800 rounded-lg p-0 overflow-hidden">
+                <div className="bg-gray-800 text-white px-4 py-2 text-sm font-bold flex justify-between">
+                    <span>主管溝通 / 批示欄 (Supervisor Comments)</span>
+                    <span className="font-normal text-gray-300 text-xs">請主管於此處簽核與回饋</span>
+                </div>
+                <div className="h-32 p-4 bg-white relative">
+                    {/* 這裡故意留白或顯示底線，方便列印後手寫 */}
+                    <div className="absolute bottom-4 right-4 w-48 border-b border-gray-400 text-right text-xs text-gray-400 pb-1">
+                        主管簽章
+                    </div>
+                    <div className="w-full h-full border-b border-dashed border-gray-200"></div>
+                </div>
+            </div>
+        </div>
+
+        {/* 頁尾 */}
+        <footer className="mt-8 text-center text-xs text-gray-400 print:text-xs print:mt-12">
+          <p>表單生成時間：{new Date().toLocaleString('zh-TW')} | © Company Internal Use</p>
+        </footer>
+
+      </div>
+      
+      {/* 列印樣式修正 */}
+      <style>{`
+        @media print {
+          @page { margin: 10mm; size: A4; }
+          body { background: white; -webkit-print-color-adjust: exact; }
+          .print\\:hidden { display: none !important; }
+          .print\\:shadow-none { box-shadow: none !important; }
+          .print\\:border-none { border: none !important; }
+          input, textarea { border: none !important; resize: none !important; background: transparent !important; }
+          input::placeholder, textarea::placeholder { color: transparent !important; }
+        }
+      `}</style>
+    </div>
+  );
+};
+
+export default App;
