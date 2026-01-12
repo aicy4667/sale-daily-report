@@ -1,3 +1,11 @@
+/**
+ * --- 部署指南 (Deployment Guide) ---
+ * * 若要部署此專案到 Vercel，請確保您的 package.json 包含以下依賴：
+ * 1. lucide-react (用於圖標)
+ * 2. tailwindcss (用於樣式)
+ * * 本檔案應替換您 Vite 專案中的 src/App.jsx
+ */
+
 import React, { useState } from 'react';
 import { Plus, Trash2, Printer, Download, FileText, User, MapPin, MessageSquare, Briefcase, Info, FileDown } from 'lucide-react';
 
@@ -37,6 +45,7 @@ const App = () => {
   };
 
   // --- 核心解決方案：生成並下載獨立 HTML 檔案 ---
+  // 此功能在 Vercel 部署後同樣有效，因為它是純前端生成的
   const handleExportHTML = () => {
     setStatusMessage('正在生成檔案...');
 
